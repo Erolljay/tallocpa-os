@@ -11,10 +11,12 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "ingest": "node --env-file=.env --import tsx scripts/ingest.ts"
   },
   "devDependencies": {
     "@types/node": "~20.14.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vitest": "^2.1.8"
   },

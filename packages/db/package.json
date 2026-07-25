@@ -1,0 +1,25 @@
+{
+  "name": "@tallocpa/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Supabase persistence for the intake wedge.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.10",
+    "@tallocpa/domain": "*",
+    "@tallocpa/template-io": "*",
+    "@tallocpa/template-parser": "*",
+    "@tallocpa/validation": "*"
+  },
+  "devDependencies": {
+    "@types/node": "~20.14.0"
+  }
+}
