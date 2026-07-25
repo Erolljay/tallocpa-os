@@ -1,0 +1,18 @@
+{
+  "name": "@tallocpa/template-parser",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Lane B: parse Excel/CSV template rows into reviewable intake drafts, validated by @tallocpa/validation.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@tallocpa/validation": "*"
+  }
+}
