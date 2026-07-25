@@ -34,14 +34,14 @@ npm run typecheck # type-check all packages
 
 ## Status
 
-- [x] F1 — schema + RLS (`supabase/migrations/0001_init.sql`) — written, not yet applied
+- [x] F1 — schema + RLS (`supabase/migrations/0001_init.sql`) — **applied to Supabase**
 - [x] F2 — domain types (`packages/domain`)
-- [x] F3 — validation package (`packages/validation`) — 42 tests green
+- [x] F3 — validation package (`packages/validation`) — 42 tests
+- [x] Lane B — template parser + file decode + **persistence** (72 tests)
+  - `npm run ingest -- <file.csv|xlsx> <clientId>` saves a batch to Supabase
+  - [ ] email intake (Gmail) — auto-ingest emailed templates
 - [ ] Lane A — Telegram webhook + worker + AI extraction
-- [ ] Lane B — template parser + email intake
 - [ ] Shared — review queue UI + staging/export
 
-## Next: provisioning
-
-The schema is written but not applied — it needs a Supabase project (Singapore
-region). Apply with the Supabase CLI (`supabase db push`) once the project exists.
+The template lane is live end to end: a client's CSV/XLSX is decoded, validated,
+and persisted as `needs_review` items. See `docs/setup-supabase.md`.
