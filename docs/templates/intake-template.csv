@@ -1,0 +1,3 @@
+Date,Supplier Name,TIN,OR Number,Description,Gross Amount,VAT Amount,VAT Class,Category
+2026-07-15,Mercury Drug,123-456-789-000,OR-004512,First-aid supplies,112.00,12.00,Vatable,Office Supplies
+2026-07-16,Meralco,000-123-456-000,SOA-778812,July electricity,"5,600.00",600.00,Vatable,Utilities

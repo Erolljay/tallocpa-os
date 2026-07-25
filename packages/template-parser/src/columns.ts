@@ -29,6 +29,35 @@ export const COLUMN_ALIASES = {
   vatClass: ["vat class", "vat type", "vat status"],
 } as const;
 
+/**
+ * The canonical header labels and their order — used to generate the blank
+ * template clients fill in. Parsing accepts any alias above; generation always
+ * emits these.
+ */
+export const CANONICAL_HEADERS = {
+  date: "Date",
+  supplierName: "Supplier Name",
+  tin: "TIN",
+  orNumber: "OR Number",
+  description: "Description",
+  gross: "Gross Amount",
+  vat: "VAT Amount",
+  vatClass: "VAT Class",
+  category: "Category",
+} as const;
+
+export const CANONICAL_HEADER_ORDER: readonly string[] = [
+  CANONICAL_HEADERS.date,
+  CANONICAL_HEADERS.supplierName,
+  CANONICAL_HEADERS.tin,
+  CANONICAL_HEADERS.orNumber,
+  CANONICAL_HEADERS.description,
+  CANONICAL_HEADERS.gross,
+  CANONICAL_HEADERS.vat,
+  CANONICAL_HEADERS.vatClass,
+  CANONICAL_HEADERS.category,
+];
+
 /** Lowercase, collapse non-alphanumerics to single spaces, trim. */
 export function normalizeHeader(value: string): string {
   return value
