@@ -1,0 +1,18 @@
+{
+  "name": "@tallocpa/sop",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "SOP library: versioned procedures attached to route steps (PSQM 1 component 6), with a coverage report.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@tallocpa/routes": "*"
+  }
+}

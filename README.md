@@ -45,6 +45,10 @@ npm run typecheck # type-check all packages
 - [x] **Routes & Jobs engine (the spine)** — `packages/routes` (6 service route
   templates + job state machine, 21 tests) + `jobs`/`job_steps` schema
   (`0002_jobs.sql`) + `createJob` persistence. `scripts/smoke-job.ts` creates a job.
+- [x] **SOP library** (PSQM 1 component 6) — `packages/sop` (versioned SOPs per
+  route step + coverage gap report; recurring services fully authored) + `sops`
+  schema with revision history (`0003_sops.sql`) + `seedSops`/`getSopForStep`.
+  `scripts/seed-sops.ts` loads the library.
 
 The template lane is live end to end: a client's CSV/XLSX is decoded, validated,
 and persisted as `needs_review` items. See `docs/setup-supabase.md`.

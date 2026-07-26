@@ -16,6 +16,7 @@
     "@supabase/supabase-js": "^2.47.10",
     "@tallocpa/domain": "*",
     "@tallocpa/routes": "*",
+    "@tallocpa/sop": "*",
     "@tallocpa/template-io": "*",
     "@tallocpa/template-parser": "*",
     "@tallocpa/validation": "*"
