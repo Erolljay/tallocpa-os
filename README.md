@@ -42,6 +42,9 @@ npm run typecheck # type-check all packages
   - [ ] email intake (Gmail) — auto-ingest emailed templates
 - [ ] Lane A — Telegram webhook + worker + AI extraction
 - [ ] Shared — review queue UI + staging/export
+- [x] **Routes & Jobs engine (the spine)** — `packages/routes` (6 service route
+  templates + job state machine, 21 tests) + `jobs`/`job_steps` schema
+  (`0002_jobs.sql`) + `createJob` persistence. `scripts/smoke-job.ts` creates a job.
 
 The template lane is live end to end: a client's CSV/XLSX is decoded, validated,
 and persisted as `needs_review` items. See `docs/setup-supabase.md`.

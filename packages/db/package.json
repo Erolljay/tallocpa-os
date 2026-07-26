@@ -15,6 +15,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.47.10",
     "@tallocpa/domain": "*",
+    "@tallocpa/routes": "*",
     "@tallocpa/template-io": "*",
     "@tallocpa/template-parser": "*",
     "@tallocpa/validation": "*"
