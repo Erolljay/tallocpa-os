@@ -32,6 +32,19 @@ npm test          # run the validation suite (Vitest)
 npm run typecheck # type-check all packages
 ```
 
+## Documentation
+
+Structured docs under `docs/` (Diataxis — one entry per reader-mode):
+
+| Doc | Read it for |
+|-----|-------------|
+| [Tutorial: first run](docs/tutorial/first-run.md) | Clone → tests green → live template + job, step by step |
+| [How-to: develop](docs/how-to/develop.md) | Install, test, type-check, migrations, data scripts |
+| [Reference: modules](docs/reference/modules.md) | Every package and its public API |
+| [Reference: database](docs/reference/database.md) | Schema, migrations, RLS |
+| [Explanation: architecture](docs/explanation/architecture.md) | The shape of the OS and the design decisions behind it |
+| [Setup: Supabase](docs/setup-supabase.md) | One-time database provisioning |
+
 ## Status
 
 - [x] F1 — schema + RLS (`supabase/migrations/0001_init.sql`) — **applied to Supabase**
