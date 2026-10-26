@@ -1,0 +1,185 @@
+{
+  "name": "TalloCPA — intake router",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tallocpa-intake",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Portal event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "5d0f7b2e-3c1a-4e8f-9b6d-2a7c41e9f0b3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Accept only well-formed events from the TalloCPA portal.\nconst EVENTS = ['document.uploaded', 'item.posted'];\nconst out = [];\nfor (const item of $input.all()) {\n  const p = item.json.body ?? {};\n  if (!EVENTS.includes(p.event) || !p.item?.id || !p.client?.id) {\n    throw new Error('Not a TalloCPA portal event');\n  }\n  for (const [name, a] of Object.entries(p.item.amounts ?? {})) {\n    if (a.centavos !== null && !Number.isSafeInteger(a.centavos)) {\n      throw new Error(`Amount ${name} must be integer centavos`);\n    }\n  }\n  out.push({ json: p });\n}\nreturn out;"
+      },
+      "name": "Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "document.uploaded",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "uploaded"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "item.posted",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "posted"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "By event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.PORTAL_URL }}/api/n8n/parse",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ id: $json.item.id }) }}",
+        "options": { "timeout": 90000 }
+      },
+      "name": "Parse (portal AI parser)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, -120]
+    },
+    {
+      "parameters": {},
+      "name": "Copy to Drive /{Client}/{Year}/Intake (build live)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [900, -120],
+      "notes": "Build with a Google login: download $json.item.fileUrl, ensure folders {client.name}/{item.year}/Intake, upload, then POST {PORTAL_URL}/api/n8n/items/{id} {action:'drive', fileId}."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Parse (portal AI parser)').item.json.item.status }}",
+              "rightValue": "needs_review",
+              "operator": { "type": "string", "operation": "equals" }
+            },
+            {
+              "leftValue": "={{ $('Parse (portal AI parser)').item.json.item.aiRecommendation }}",
+              "rightValue": "approve",
+              "operator": { "type": "string", "operation": "equals" }
+            },
+            {
+              "leftValue": "={{ $('Parse (portal AI parser)').item.json.item.taxValidity }}",
+              "rightValue": "not_valid",
+              "operator": { "type": "string", "operation": "notEquals" }
+            },
+            {
+              "leftValue": "={{ ['sales', 'purchases', 'expenses'].includes($('Parse (portal AI parser)').item.json.item.ledger) }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Auto-clear rule",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, -120],
+      "notes": "The firm's rule — edit freely. The portal re-checks the stored item (canAutoClear) before clearing anything."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.PORTAL_URL }}/api/n8n/items/{{ $('Parse (portal AI parser)').item.json.item.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"action\":\"clear\"}",
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "name": "Clear & post (portal)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, -200]
+    },
+    {
+      "parameters": {},
+      "name": "Stays in review bucket",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1340, -40]
+    },
+    {
+      "parameters": {},
+      "name": "Posted → next stages (Manager.io push, tax computation)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [680, 120]
+    }
+  ],
+  "connections": {
+    "Portal event": { "main": [[{ "node": "Validate", "type": "main", "index": 0 }]] },
+    "Validate": { "main": [[{ "node": "By event", "type": "main", "index": 0 }]] },
+    "By event": {
+      "main": [
+        [{ "node": "Parse (portal AI parser)", "type": "main", "index": 0 }],
+        [{ "node": "Posted → next stages (Manager.io push, tax computation)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse (portal AI parser)": {
+      "main": [[{ "node": "Copy to Drive /{Client}/{Year}/Intake (build live)", "type": "main", "index": 0 }]]
+    },
+    "Copy to Drive /{Client}/{Year}/Intake (build live)": {
+      "main": [[{ "node": "Auto-clear rule", "type": "main", "index": 0 }]]
+    },
+    "Auto-clear rule": {
+      "main": [
+        [{ "node": "Clear & post (portal)", "type": "main", "index": 0 }],
+        [{ "node": "Stays in review bucket", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1", "timezone": "Asia/Manila" },
+  "pinData": {}
+}

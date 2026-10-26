@@ -1,0 +1,2 @@
+# These files are copied to a Linux server; CRLF line endings break bash and Caddy.
+* text eol=lf

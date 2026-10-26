@@ -1,0 +1,22 @@
+{
+  "name": "@tallocpa/telegram-invoice-bot",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Standalone Telegram bot: parses supplier invoices with Gemini vision, replies with the seven BIR fields, and persists reviewable drafts to the intake pipeline.",
+  "main": "./src/index.ts",
+  "scripts": {
+    "start": "node --env-file=../../.env --import tsx src/index.ts",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@tallocpa/db": "*",
+    "@tallocpa/domain": "*",
+    "@tallocpa/photo-parser": "*",
+    "@tallocpa/validation": "*"
+  },
+  "devDependencies": {
+    "@types/node": "~20.14.0",
+    "tsx": "^4.19.2"
+  }
+}

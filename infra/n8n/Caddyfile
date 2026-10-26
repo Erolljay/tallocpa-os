@@ -1,0 +1,6 @@
+# Caddy fetches and renews the Let's Encrypt certificate automatically.
+# Needs: DNS A record for N8N_DOMAIN -> this VM, and ports 80 + 443 open.
+{$N8N_DOMAIN} {
+	encode gzip
+	reverse_proxy n8n:5678
+}

@@ -1,0 +1,101 @@
+{
+  "name": "TalloCPA — monthly holds",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 6 1 * *" }] }
+      },
+      "name": "1st of the month, 6 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// The month being opened, in Manila time (YYYY-MM).\nconst period = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Manila' }).slice(0, 7);\nreturn [{ json: { period } }];"
+      },
+      "name": "This month (Manila)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.PORTAL_URL }}/api/n8n/holds",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ period: $json.period }) }}",
+        "options": {}
+      },
+      "name": "Release due holds (portal)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// One item per released hold, to run back through the auto-clear rule.\nreturn ($json.released ?? []).map((id) => ({ json: { id } }));"
+      },
+      "name": "Released items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, -100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.PORTAL_URL }}/api/n8n/items/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"action\":\"clear\"}",
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "name": "Try auto-clear (else stays for staff)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, -100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Hard rule 3: aging alert for held purchases/expenses (> 30 days old).\nconst aging = $json.aging ?? [];\nif (aging.length === 0) return [];\nconst peso = (c) => c == null ? '—' : '₱' + (c / 100).toLocaleString('en-PH', { minimumFractionDigits: 2 });\nconst lines = aging.map((a) => `- ${a.txn_date}  ${a.supplier_name ?? '—'}  ${peso(a.gross)}  held to ${a.hold_period}  (item ${a.id})`);\nreturn [{ json: { subject: `TalloCPA: ${aging.length} held purchase(s) aging`, text: `Held purchases/expenses older than 30 days:\\n\\n${lines.join('\\n')}\\n\\nThey must be reported within the same taxable year.` } }];"
+      },
+      "name": "Aging held purchases",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 100]
+    },
+    {
+      "parameters": {
+        "fromEmail": "n8n@tallocpa.com",
+        "toEmail": "erolljay@tallocpa.com",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.text }}",
+        "options": {}
+      },
+      "name": "Email the firm",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [880, 100]
+    }
+  ],
+  "connections": {
+    "1st of the month, 6 AM": { "main": [[{ "node": "This month (Manila)", "type": "main", "index": 0 }]] },
+    "This month (Manila)": { "main": [[{ "node": "Release due holds (portal)", "type": "main", "index": 0 }]] },
+    "Release due holds (portal)": {
+      "main": [[
+        { "node": "Released items", "type": "main", "index": 0 },
+        { "node": "Aging held purchases", "type": "main", "index": 0 }
+      ]]
+    },
+    "Released items": { "main": [[{ "node": "Try auto-clear (else stays for staff)", "type": "main", "index": 0 }]] },
+    "Aging held purchases": { "main": [[{ "node": "Email the firm", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "timezone": "Asia/Manila" },
+  "pinData": {}
+}

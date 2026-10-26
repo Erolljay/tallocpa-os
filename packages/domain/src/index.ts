@@ -16,30 +16,43 @@ export type IsoTimestamp = string; // RFC 3339
 // Enums (mirror the Postgres enum types in supabase/migrations)
 // ---------------------------------------------------------------------------
 
-export type IntakeSource = "photo" | "template" | "manual";
+export type IntakeSource = "photo" | "template" | "manual" | "portal";
+
+/** Which book a source document belongs to (drives the n8n tax roll-ups). */
+export type Ledger = "sales" | "purchases" | "payroll" | "expenses" | "other";
+
+/** What the AI suggests the reviewer do with an item. Staff always decide. */
+export type AiRecommendation = "approve" | "review" | "reject";
 
 export type DocType = "official_receipt" | "sales_invoice" | "unknown";
 
 export type VatClass = "vatable" | "vat_exempt" | "zero_rated";
 
 /**
- * Lifecycle of an intake item.
+ * Lifecycle of an intake item (CLAUDE.md: needs_review = "in_review",
+ * approved = "cleared").
  *
- *   received ──▶ needs_review ──▶ approved ──▶ exported
- *      │                │
- *      │                ├──▶ rejected
- *      ▼                ▼
- *   extract_failed   (edited, then back to needs_review)
+ *   uploaded ──▶ needs_review | flagged ──▶ approved ──▶ posted
+ *      │                │      │
+ *      ▼                │      ├──▶ held (later month, same taxable year)
+ *   extract_failed      └──────┴──▶ rejected
  *   / unreadable
  */
 export type ReviewStatus =
   | "received"
+  | "uploaded"
   | "extract_failed"
   | "unreadable"
   | "needs_review"
+  | "flagged"
+  | "held"
   | "approved"
+  | "posted"
   | "rejected"
   | "exported";
+
+/** Tax validity of a source document (CLAUDE.md step 2). */
+export type TaxValidity = "valid_vat_and_it" | "valid_it_only" | "not_valid";
 
 /** Staff role — approval limits and acting-manager live here (governance layer). */
 export type StaffRole = "owner" | "manager" | "reviewer" | "staff";
@@ -105,11 +118,34 @@ export interface IntakeItem {
   docType: DocType;
   category: string | null;
   accountCode: string | null; // resolved chart-of-accounts code
+  ledger: Ledger | null;
+  counterpartyAddress: string | null;
 
   // extraction metadata (drives the review gate)
   confidence: number | null; // 0..1
   birValid: boolean | null;
   reviewNotes: string | null;
+  aiRecommendation: AiRecommendation | null;
+
+  // approval + hand-off to n8n
+  approvedBy: Uuid | null;
+  approvedAt: IsoTimestamp | null;
+  n8nSentAt: IsoTimestamp | null;
+
+  // workflow spec (0006): printed amounts, validity, holds, books
+  taxValidity: TaxValidity | null;
+  vatable: Centavos | null;
+  vatExempt: Centavos | null;
+  zeroRated: Centavos | null;
+  whtAmount: Centavos | null;
+  atc: string | null;
+  holdPeriod: string | null; // YYYY-MM, same taxable year as txnDate
+  holdReason: string | null;
+  holdApprovedBy: Uuid | null;
+  holdApprovedAt: IsoTimestamp | null;
+  clientNote: string | null;
+  approvalSource: "staff" | "rule" | null;
+  driveFileId: string | null;
 
   createdAt: IsoTimestamp;
   updatedAt: IsoTimestamp;
